@@ -92,7 +92,6 @@ $(KERNEL_ELF): $(ALL_OBJ) $(LINKER_SCRIPT)
 # Create the ISO image containing the kernel
 $(ISO_FILE): $(KERNEL_ELF)
 	mkdir -p $(GRUB_DIR)
-	cp $(STAGE2_FILE) $(GRUB_DIR)/
 	$(MKISO) -R \
 		-b boot/grub/stage2_eltorito \
 		-no-emul-boot \

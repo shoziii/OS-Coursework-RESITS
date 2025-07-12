@@ -1,6 +1,6 @@
 #include "io.h"
 #include "pic.h"
-#include "frame_buffer.h"
+#include "framebuffer.h"
 
 /*
     Programmable Interrupt Controller

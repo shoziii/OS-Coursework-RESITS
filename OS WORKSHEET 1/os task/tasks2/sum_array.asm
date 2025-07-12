@@ -1,7 +1,7 @@
 section .data
     msg db 'The sum of the array is: ', 0
     newline db 0xA, 0
-    buffer db '000000', 0
+    buffer times 12 db 0
 
 section .bss
     arr resd 100
@@ -98,11 +98,3 @@ reverse_string:
 end_reverse:
     ret
 
-; Alternative entry point for standalone execution
-global _start
-_start:
-    call sum_array
-    ; Exit program
-    mov eax, 1
-    xor ebx, ebx
-    int 0x80

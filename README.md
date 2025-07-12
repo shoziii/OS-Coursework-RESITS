@@ -15,10 +15,10 @@ This repository contains the implementation of Operating Systems coursework for 
 ## 📁 Project Structure
 ```
 OS/
-├── os task/os task/           # Worksheet 1 - Assembly Tasks
+├── OS WORKSHEET 1/os task/   # Worksheet 1 - Assembly Tasks
 │   ├── task 1/               # Basic arithmetic operations
 │   └── tasks2/               # Array operations and user input
-├── APgyrx8/os task 2/TinyOS/ # Worksheet 2 - TinyOS Implementation
+├── OS WORKSHEET 2/os task 2/TinyOS/ # Worksheet 2 - TinyOS Implementation
 │   ├── drivers/              # Interrupt, PIC, keyboard, framebuffer drivers
 │   ├── source/               # Kernel source code
 │   └── iso/                  # Bootable ISO components
@@ -29,7 +29,7 @@ OS/
 
 ### Worksheet 1 (Assembly)
 ```bash
-cd "os task/os task/task 1"
+cd "OS WORKSHEET 1/os task/task 1"
 make clean && make all
 make run-task1  # Test task 1
 make run-task2  # Test task 2
@@ -41,7 +41,7 @@ make run        # Test integrated program
 
 ### Worksheet 2 (TinyOS)
 ```bash
-cd "APgyrx8/os task 2/TinyOS"
+cd "OS WORKSHEET 2/os task 2/TinyOS"
 make clean && make all
 make run        # Boot in QEMU (if available)
 ```

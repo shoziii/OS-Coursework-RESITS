@@ -3,7 +3,7 @@
 
 #define KEYBOARD_MAX_ASCII 83 
 
-#include "drivers/type.h"
+#include "type.h"
 
 u8int keyboard_read_scan_code(void);
 

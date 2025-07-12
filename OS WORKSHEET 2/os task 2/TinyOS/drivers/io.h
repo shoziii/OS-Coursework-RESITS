@@ -1,7 +1,7 @@
 #ifndef INCLUDE_IO_H
 #define INCLUDE_IO_H
 
-#include "drivers/type.h"
+#include "type.h"
 
 /** outb:
  *  Sends the given data to the given I/O port. Defined in io.s

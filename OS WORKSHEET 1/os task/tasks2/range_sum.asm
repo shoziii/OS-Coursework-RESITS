@@ -16,10 +16,11 @@ section .data
     newline db 0xA, 0
 
 section .bss
-    start resb 4
-    end resb 4
+    input_buffer resb 100    ; Single buffer for all input
     sum resd 1
     buffer resb 12
+    start_val resd 1
+    end_val resd 1
 
 section .text
     global range_sum
@@ -32,39 +33,31 @@ range_sum:
     mov edx, 34
     int 0x80
 
-    ; Read starting index
+    ; Read both inputs into single buffer
     mov eax, 3
     mov ebx, 0
-    mov ecx, start
-    mov edx, 4
+    mov ecx, input_buffer
+    mov edx, 100
     int 0x80
-    mov ecx, start
-    call str_to_int
+    
+    ; Parse first number (start index)
+    mov esi, input_buffer
+    call parse_next_number
     cmp eax, -1
     je invalid_input
-    mov ebx, eax
-
-    ; Prompt for ending index
-    mov eax, 4
-    mov ebx, 1
-    mov ecx, prompt_end
-    mov edx, 32
-    int 0x80
-
-    ; Read ending index
-    mov eax, 3
-    mov ebx, 0
-    mov ecx, end
-    mov edx, 4
-    int 0x80
-    mov ecx, end
-    call str_to_int
+    mov [start_val], eax
+    
+    ; Parse second number (end index)
+    call parse_next_number
     cmp eax, -1
     je invalid_input
-    mov ecx, eax
+    mov [end_val], eax
+    
+    ; Get the values
+    mov ebx, [start_val]
+    mov ecx, [end_val]
 
-    ; Validate input range - FIXED VALIDATION
-    ; Check if both indices are within 1-100
+    ; Validate input range
     cmp ebx, 1
     jl invalid_input
     cmp ebx, 100
@@ -74,26 +67,33 @@ range_sum:
     cmp ecx, 100
     jg invalid_input
     
-    ; Check if start <= end (before swapping)
+    ; Ensure start <= end
     cmp ebx, ecx
     jle calculate_sum
     xchg ebx, ecx
 
 calculate_sum:
-    dec ebx
-    dec ecx
-
-    ; Calculate sum
-    xor eax, eax
-    mov esi, ebx
+    ; Convert user input (1-100) to array indices (0-99)
+    dec ebx  ; start index in array
+    dec ecx  ; end index in array
+    
+    ; Ensure start <= end
+    cmp ebx, ecx
+    jle do_sum
+    xchg ebx, ecx  ; swap if needed
+    
+do_sum:
+    ; Calculate sum from array[start] to array[end] inclusive
+    xor eax, eax      ; sum = 0
+    mov esi, ebx      ; current index = start
+    
 sum_loop:
-    cmp esi, ecx
-    jg sum_done
-    movzx edx, byte [array + esi]
-    add eax, edx
-    inc esi
-    jmp sum_loop
-
+    movzx edx, byte [array + esi]  ; get array[current]
+    add eax, edx                   ; sum += array[current]
+    inc esi                        ; current++
+    cmp esi, ecx                   ; compare current with end
+    jle sum_loop                   ; continue if current <= end
+    
 sum_done:
     mov [sum], eax
 
@@ -137,46 +137,61 @@ invalid_input:
     ; Return to caller instead of exit
     ret
 
-; Convert string to integer (ECX points to the string)
-str_to_int:
-    xor eax, eax
-    mov esi, ecx
-convert_loop:
+; Parse next number from input buffer (ESI points to current position)
+; Returns: EAX = number, ESI = position after number
+parse_next_number:
+    ; Skip non-digit characters (spaces, newlines, etc.)
+skip_non_digits:
     mov bl, byte [esi]
-    cmp bl, 0xA
-    je convert_done
     cmp bl, 0
-    je convert_done
+    je parse_error
+    cmp bl, '0'
+    jl skip_next
+    cmp bl, '9'
+    jg skip_next
+    jmp start_parsing
+skip_next:
+    inc esi
+    jmp skip_non_digits
+    
+start_parsing:
+    xor eax, eax
+parse_loop:
+    mov bl, byte [esi]
+    cmp bl, '0'
+    jl parse_done
+    cmp bl, '9'
+    jg parse_done
     sub bl, '0'
-    jl convert_error
-    cmp bl, 9
-    jg convert_error
     imul eax, eax, 10
     add eax, ebx
     inc esi
-    jmp convert_loop
-convert_done:
+    jmp parse_loop
+parse_done:
     ret
-convert_error:
+parse_error:
     mov eax, -1
     ret
 
 ; Convert integer in EAX to string in ECX
 int_to_str:
+    push eax
+    push ebx
+    push edx
+    mov edi, ecx
+    add edi, 11
+    mov byte [edi], 0
     mov ebx, 10
-    add ecx, 10
-    mov byte [ecx], 0
-    cmp eax, 0
-    jne convert_digit
-    dec ecx
-    mov byte [ecx], '0'
-    ret
 convert_digit:
     xor edx, edx
     div ebx
     add dl, '0'
-    dec ecx
-    mov [ecx], dl
+    dec edi
+    mov [edi], dl
     test eax, eax
     jnz convert_digit
+    mov ecx, edi
+    pop edx
+    pop ebx
+    pop eax
     ret
