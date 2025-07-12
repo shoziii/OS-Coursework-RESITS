@@ -1,0 +1,31 @@
+# Build artifacts
+*.o
+*.elf
+*.iso
+
+# Executables  
+task1
+task2
+program
+sum_array
+welcome_message
+
+# Logs
+*.txt
+logQ.txt
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+
+# Temporary files
+*~
+*.tmp
+*.bak
+
+# Large binary files
+*.bin 
