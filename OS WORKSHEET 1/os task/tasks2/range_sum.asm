@@ -16,7 +16,8 @@ section .data
     newline db 0xA, 0
 
 section .bss
-    input_buffer resb 100    ; Single buffer for all input
+    start_buffer resb 10
+    end_buffer resb 10
     sum resd 1
     buffer resb 12
     start_val resd 1
@@ -33,22 +34,37 @@ range_sum:
     mov edx, 34
     int 0x80
 
-    ; Read both inputs into single buffer
+    ; Read starting index
     mov eax, 3
     mov ebx, 0
-    mov ecx, input_buffer
-    mov edx, 100
+    mov ecx, start_buffer
+    mov edx, 10
     int 0x80
     
-    ; Parse first number (start index)
-    mov esi, input_buffer
-    call parse_next_number
+    ; Convert start input to integer
+    mov esi, start_buffer
+    call str_to_int
     cmp eax, -1
     je invalid_input
     mov [start_val], eax
     
-    ; Parse second number (end index)
-    call parse_next_number
+    ; Prompt for ending index
+    mov eax, 4
+    mov ebx, 1
+    mov ecx, prompt_end
+    mov edx, 32
+    int 0x80
+
+    ; Read ending index
+    mov eax, 3
+    mov ebx, 0
+    mov ecx, end_buffer
+    mov edx, 10
+    int 0x80
+    
+    ; Convert end input to integer
+    mov esi, end_buffer
+    call str_to_int
     cmp eax, -1
     je invalid_input
     mov [end_val], eax
@@ -74,25 +90,25 @@ range_sum:
 
 calculate_sum:
     ; Convert user input (1-100) to array indices (0-99)
-    dec ebx  ; start index in array
-    dec ecx  ; end index in array
+    dec ebx
+    dec ecx
     
-    ; Ensure start <= end
+    ; Ensure start <= end after conversion
     cmp ebx, ecx
     jle do_sum
-    xchg ebx, ecx  ; swap if needed
+    xchg ebx, ecx
     
 do_sum:
     ; Calculate sum from array[start] to array[end] inclusive
-    xor eax, eax      ; sum = 0
-    mov esi, ebx      ; current index = start
+    xor eax, eax
+    mov esi, ebx
     
 sum_loop:
-    movzx edx, byte [array + esi]  ; get array[current]
-    add eax, edx                   ; sum += array[current]
-    inc esi                        ; current++
-    cmp esi, ecx                   ; compare current with end
-    jle sum_loop                   ; continue if current <= end
+    movzx edx, byte [array + esi]
+    add eax, edx
+    inc esi
+    cmp esi, ecx
+    jle sum_loop
     
 sum_done:
     mov [sum], eax
@@ -101,7 +117,7 @@ sum_done:
     mov eax, 4
     mov ebx, 1
     mov ecx, result_msg
-    mov edx, 27
+    mov edx, 25
     int 0x80
 
     ; Convert sum to string
@@ -123,7 +139,6 @@ sum_done:
     mov edx, 1
     int 0x80
 
-    ; Return to caller instead of exit
     ret
 
 invalid_input:
@@ -131,45 +146,36 @@ invalid_input:
     mov eax, 4
     mov ebx, 1
     mov ecx, invalid_msg
-    mov edx, 30
+    mov edx, 29
     int 0x80
-
-    ; Return to caller instead of exit
     ret
 
-; Parse next number from input buffer (ESI points to current position)
-; Returns: EAX = number, ESI = position after number
-parse_next_number:
-    ; Skip non-digit characters (spaces, newlines, etc.)
-skip_non_digits:
-    mov bl, byte [esi]
-    cmp bl, 0
-    je parse_error
-    cmp bl, '0'
-    jl skip_next
-    cmp bl, '9'
-    jg skip_next
-    jmp start_parsing
-skip_next:
-    inc esi
-    jmp skip_non_digits
-    
-start_parsing:
+; Convert string to integer (ESI points to string)
+; Returns: EAX = number or -1 if error
+str_to_int:
     xor eax, eax
-parse_loop:
+    xor ebx, ebx
+    
+convert_loop:
     mov bl, byte [esi]
+    cmp bl, 0xA
+    je convert_done
+    cmp bl, 0
+    je convert_done
     cmp bl, '0'
-    jl parse_done
+    jl convert_error
     cmp bl, '9'
-    jg parse_done
+    jg convert_error
     sub bl, '0'
     imul eax, eax, 10
     add eax, ebx
     inc esi
-    jmp parse_loop
-parse_done:
+    jmp convert_loop
+    
+convert_done:
     ret
-parse_error:
+    
+convert_error:
     mov eax, -1
     ret
 
