@@ -47,6 +47,7 @@ make run        # Boot in QEMU (if available)
 
 ## Implemented Features
 
+
 ### Worksheet 1
 - Fixed makefile auto-execution issues
 - Corrected input validation in range_sum.asm
